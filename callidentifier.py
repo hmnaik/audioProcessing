@@ -69,7 +69,7 @@ def plot_intensities(ampDict):
 
 def findInfoFromName(audioFileName):
     dict = {}
-
+    audioFileName = os.path.basename(audioFileName)
     sections = audioFileName.split("_")
     channelSection = sections[1].split("Chan")
     dateSection = sections[2].split("-")

@@ -9,7 +9,6 @@ def find_time_stamp(fifteentime):
     return mins, seconds
 
 def read_File(filename):
-    print("Read files")
     filename_without_extension = filename.split(".txt")[0]
     filename_with_extension = filename_without_extension + "_modified" + ".txt"
     csvFileName = filename_without_extension + "_modified" + ".csv"
