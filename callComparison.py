@@ -81,35 +81,38 @@ if __name__ == "__main__":
     path_database = os.path.join(path_to_files_testing,"database.csv")
     startHour = 11
     startMin = 15
-    endMin = 15
+    endMin = startMin + 15
     seconds = [i for i in range(0,60,5)]
+    min_sample_range = 1000
+    max_sample_range = 3000
 
     dataBase = read_csv(path_database)
 
     updatedDataBase = []
+    min = startMin
+    while min < endMin:
+        for sec in seconds:
+            query_str = get_query_value(startHour,min,sec)
+            data_subset = grab_data_for_given_query(dataBase.copy(), query_str)
+            print(f'Query: {query_str} : Data Size : {data_subset.shape} ')
+            if data_subset.empty:
+                print("No data found for the query")
+                break
+            max_file_name, sample_number = process_subset(data_subset.copy())
+            # All file names
+            file_names = data_subset["Filename"]
 
-    for sec in seconds:
-        query_str = get_query_value(startHour,startMin,sec)
-        print(query_str)
-        data_subset = grab_data_for_given_query(dataBase.copy(), query_str)
+            sample_locations, amp_values = findMaxValues(path_to_files, file_names, sample_number-min_sample_range, sample_number+max_sample_range)
+            # print(f'Max sample:{sample_number}')
+            # print(f"Sameple range : {sample_number-1000} - {sample_number+3000}")
+            # print(f'Old Intensity: {data_subset["Max_intensity"].tolist()}\n New Val: {amp_values}') # :{data_subset["Max_sample_timing"]}
+            # print(f'Old Sample Number : {data_subset["Max_sample_timing"].tolist()} \n New value: {sample_locations}')
 
-        if data_subset.empty:
-            print("No data found for the query")
-            break
-        max_file_name, sample_number = process_subset(data_subset.copy())
-        # All file names
-        file_names = data_subset["Filename"]
+            data_subset["Max_intensity"] = amp_values
+            data_subset["Max_sample_timing"] = sample_locations
 
-        sample_locations, amp_values = findMaxValues(path_to_files, file_names, sample_number-1000, sample_number+3000)
-        print(f'Max sample:{sample_number}')
-        print(f"Sameple range : {sample_number-1000} - {sample_number+3000}")
-        print(f'Old Intensity: {data_subset["Max_intensity"].tolist()}\n New Val: {amp_values}') # :{data_subset["Max_sample_timing"]}
-        print(f'Old Sample Number : {data_subset["Max_sample_timing"].tolist()} \n New value: {sample_locations}')
-
-        data_subset["Max_intensity"] = amp_values
-        data_subset["Max_sample_timing"] = sample_locations
-
-        updatedDataBase.append(data_subset)
+            updatedDataBase.append(data_subset)
+            min = min + 1
 
     final_dataset = pd.concat(updatedDataBase)
     newFileName = os.path.join(path_to_files, "updated_dataBase.csv")
