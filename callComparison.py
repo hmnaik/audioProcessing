@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-
+import librosa
 #
 def read_csv(file_name):
     """
@@ -32,7 +32,7 @@ def grab_data_for_given_query(dataBase,query_string):
     return subSet
 
 #def update_values(subset_database):
-def process_subset(path_to_files,data_subset):
+def process_subset(data_subset):
     # find max intensity
 
     max_intensity_id = data_subset["Max_intensity"].idxmax()
@@ -40,6 +40,36 @@ def process_subset(path_to_files,data_subset):
     file_name = data_subset["Filename"].loc[max_intensity_id]
 
     return file_name, sample_number
+
+
+def findMaxValues(path_to_files,file_names,sample_min, sample_max):
+
+    sample_locations = []
+    amp_values = []
+    for file in file_names:
+        # Go thought all the files
+        audio_file_path = os.path.join(path_to_files,file)
+        fn_wav = str(audio_file_path)
+
+        x, Fs = librosa.load(fn_wav, sr=None)
+        if sample_max > 500000:
+            sample_max = 500000
+
+        # Fine sample values
+        selected_sample_values = x[sample_min:sample_max]
+        maxAmp = max(selected_sample_values)
+
+        # The implementation below is to avoid a bug, that if any similar value exist outside the range then we would not really get the right index
+        selected_sample_values = list(selected_sample_values)
+        sampleNo = selected_sample_values.index(maxAmp)
+        sampleNo = sampleNo + sample_min
+
+        # Create a list of the new values
+        sample_locations.append(sampleNo)
+        amp_values.append(maxAmp)
+
+    return sample_locations, amp_values
+
 
 if __name__ == "__main__":
     """
@@ -52,31 +82,35 @@ if __name__ == "__main__":
     startHour = 11
     startMin = 15
     endMin = 15
-    seconds = [i for i in range(0,10,5)]
+    seconds = [i for i in range(0,60,5)]
 
     dataBase = read_csv(path_database)
+
+    updatedDataBase = []
 
     for sec in seconds:
         query_str = get_query_value(startHour,startMin,sec)
         print(query_str)
-        data_subset = grab_data_for_given_query(dataBase, query_str)
+        data_subset = grab_data_for_given_query(dataBase.copy(), query_str)
+
         if data_subset.empty:
             print("No data found for the query")
             break
-        file_name, sample_number = process_subset(path_to_files,data_subset)
+        max_file_name, sample_number = process_subset(data_subset.copy())
+        # All file names
+        file_names = data_subset["Filename"]
 
-        print(data_subset.shape)
+        sample_locations, amp_values = findMaxValues(path_to_files, file_names, sample_number-1000, sample_number+3000)
+        print(f'Max sample:{sample_number}')
+        print(f"Sameple range : {sample_number-1000} - {sample_number+3000}")
+        print(f'Old Intensity: {data_subset["Max_intensity"].tolist()}\n New Val: {amp_values}') # :{data_subset["Max_sample_timing"]}
+        print(f'Old Sample Number : {data_subset["Max_sample_timing"].tolist()} \n New value: {sample_locations}')
 
-    print("File read")
+        data_subset["Max_intensity"] = amp_values
+        data_subset["Max_sample_timing"] = sample_locations
 
-    # Load file frome Nora
+        updatedDataBase.append(data_subset)
 
-
-    # Load file prepared by our algorithm
-    # Combine data from all the files to have one single big file
-
-    # For each file in Nora's calls, find matching file and read stats
-
-
-    # Read file name and call start times
-
+    final_dataset = pd.concat(updatedDataBase)
+    newFileName = os.path.join(path_to_files, "updated_dataBase.csv")
+    final_dataset.to_csv(newFileName, index= False)
