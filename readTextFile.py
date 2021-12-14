@@ -1,3 +1,6 @@
+### The file is used to read the manual file created by Nora, all call timings marked manually are
+### associated with a particular .wav file accoding to the timing of the recording.
+
 import math
 import csv
 
@@ -11,7 +14,7 @@ def find_time_stamp(fifteentime):
 def read_File(filename):
     filename_without_extension = filename.split(".txt")[0]
     filename_with_extension = filename_without_extension + "_modified" + ".txt"
-    csvFileName = filename_without_extension + "_modified" + ".csv"
+    csvFileName = filename_without_extension + "_modifiedTemp" + ".csv"
 
     csvFileHandler = open(csvFileName,'w', newline= "")
     csvWriter = csv.writer(csvFileHandler, delimiter = ",")
