@@ -2,7 +2,8 @@
 import os
 import pandas as pd
 import librosa
-import numpy
+import numpy as np
+from scipy import signal
 
 def getSampleData(file, minRange, maxRange):
     #work out padding
@@ -13,7 +14,8 @@ def getSampleData(file, minRange, maxRange):
 
 def find_correlation_points(soundFiles, sampleTiming, focalChannel, path_to_files):
     print("Temp")
-    dataDict = {}
+    correlationDataDict = {}
+    lagDataDict = {}
 
     # Find sample values for all the files
     focalFile = [i for i in soundFiles if str(focalChannel) in i ]
@@ -28,16 +30,22 @@ def find_correlation_points(soundFiles, sampleTiming, focalChannel, path_to_file
         if file == focalFile:
             print("File")
             correlation = 0
-            dataDict[file] = correlation
+            correlationDataDict[file] = correlation
         else:
             queryFilePath = os.path.join(path_to_files, file)
             dataOnQueryFile = getSampleData(queryFilePath, sampleTiming-min_sample_range, sampleTiming+max_sample_range)
-            #signal.correlate(dataOnFocalFile, dataOnQueryFile, mode="full", method= "auto")
-            corr_values = numpy.correlate(dataOnFocalFile,dataOnQueryFile)
-            print(f"Corrleation: {corr_values}")
-            dataDict[file] = corr_values
+            corr_values= signal.correlate(dataOnFocalFile, dataOnQueryFile, mode="full", method= "auto")
+            maxCorr = np.max(corr_values)
+            print(corr_values)
+            lags = signal.correlation_lags(len(dataOnFocalFile),len(dataOnQueryFile), mode = "full")
+            lag = lags [np.argmax(corr_values)]
 
-    return dataDict
+            #corr_values = numpy.correlate(dataOnFocalFile,dataOnQueryFile)
+            print(f"Corrleation: {corr_values}")
+            correlationDataDict[file] = maxCorr
+            lagDataDict[file] = lag
+
+    return correlationDataDict,lagDataDict
 
 def process_dataset(dataSet, noOfChannels, path_to_files):
 
@@ -47,6 +55,9 @@ def process_dataset(dataSet, noOfChannels, path_to_files):
 
     # Create the list of indexes
     indexList = [i for i in range(0,dataSet.shape[0],totalSequence)]
+
+    list_of_correlation = []
+    list_of_lag = []
 
     # Go through each index on the dataset and select all the channels
     for index in indexList:
@@ -64,12 +75,19 @@ def process_dataset(dataSet, noOfChannels, path_to_files):
         min_sample_range = 1000
         max_sample_range = 3000
 
-        dataDict = find_correlation_points(files, sampleTiming, focalChannel, path_to_files)
+        dataDict, lagDict = find_correlation_points(files, sampleTiming, focalChannel, path_to_files)
+        listOfCorrVal = list(dataDict.values())
+        list_of_correlation = list_of_correlation + listOfCorrVal
+        print(list_of_correlation)
+
+        listOfLagVal = list(lagDict.values())
+        list_of_lag = list_of_lag + listOfLagVal
 
     # Find max intensity value and corresponding sample value (index)
-
+    dataSet["Correlation"] = list_of_correlation
+    dataSet["Lag"] = list_of_lag
     # Define sample range around the sample value
-
+    return dataSet
     # Get sample value of all such sound files and file correlation factor with those files
 
     # Save focal value, correlation value and the time lag
@@ -88,4 +106,6 @@ if __name__ == '__main__':
 
     dataSet = pd.read_csv(path_database)
     noOfChannels = 23
-    process_dataset(dataSet, noOfChannels, path_to_files)
+    updated_dataset = process_dataset(dataSet, noOfChannels, path_to_files)
+    final_file = os.path.join(path_to_files, "correlation.csv")
+    updated_dataset.to_csv(final_file)
