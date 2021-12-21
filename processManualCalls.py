@@ -21,7 +21,15 @@ def getSampleData(file, minRange, maxRange):
     else:
         samples = samples[minRange:maxRange]
 
-    return samples
+    # Fine sample values
+    maxAmp = max(samples)
+
+    # The implementation below is to avoid a bug, that if any similar value exist outside the range then we would not really get the right index
+    selected_sample_values = list(samples)
+    sampleNo = selected_sample_values.index(maxAmp)
+    sampleNo = sampleNo + maxRange
+
+    return samples, maxAmp, sampleNo
 
 # Find time from the acoustic file
 def find_sampleno_from_call_time(fifteentime):
@@ -39,6 +47,9 @@ def process_audio( soundFiles ,  sampleTiming , focalFile, path_to_files):
     correlationDataDict = {}
     lagDataDict = {}
 
+    sampleLocations = {}
+    ampValues = {}
+
     print(f"List of sound files:{soundFiles} ")
     print(f"Focal file: {focalFile}")
 
@@ -51,7 +62,7 @@ def process_audio( soundFiles ,  sampleTiming , focalFile, path_to_files):
     max_sample_range = 3000
 
     focalFile_path = os.path.join(path_to_files, focalFile[0])
-    #dataOnFocalFile = getSampleData(focalFile_path, sampleTiming - min_sample_range, sampleTiming + max_sample_range)
+    #dataOnFocalFile, maxAmp, sampleNo = getSampleData(focalFile_path, sampleTiming - min_sample_range, sampleTiming + max_sample_range)
 
     for file in soundFiles:
         # Select the file that is not focal file
@@ -59,20 +70,28 @@ def process_audio( soundFiles ,  sampleTiming , focalFile, path_to_files):
             # print("File")
             correlation = 0
             correlationDataDict[file] = correlation
+            #ampValues[file] = maxAmp
+            #sampleLocations[file] = sampleNo
         else:
             queryFilePath = os.path.join(path_to_files, file)
-            dataOnQueryFile = getSampleData(queryFilePath, sampleTiming - min_sample_range,
-                                            sampleTiming + max_sample_range)
+            #dataOnQueryFile, maxAmp, sampleNo = getSampleData(queryFilePath, sampleTiming - min_sample_range,
+                                           # sampleTiming + max_sample_range)
 
-            # plot
+            #ampValues[file] = maxAmp
+            #sampleLocations[file] = sampleNo
 
+            # Find correlation
             #corr_values = signal.correlate(dataOnQueryFile, dataOnFocalFile, mode="full", method="auto")
             #maxCorr = np.max(corr_values)
 
-            # find logs
-
+            # find lags
             #lags = signal.correlation_lags(len(dataOnFocalFile), len(dataOnQueryFile), mode="full")
             #lag = lags[np.argmax(corr_values)]
+
+            # Save value to dictionary
+            # correlationDataDict[file] = maxCorr
+            # lagDataDict[file] = lag
+
 
             # Plotting values
             # corr_values = numpy.correlate(dataOnFocalFile,dataOnQueryFile)
@@ -102,17 +121,39 @@ def process_audio( soundFiles ,  sampleTiming , focalFile, path_to_files):
             #
             # plt.show()
 
-            #correlationDataDict[file] = maxCorr
-            #lagDataDict[file] = lag
+    return correlationDataDict, lagDataDict, sampleLocations, ampValues
 
-# Find the right folder for the audio files
+def findInfoFromName(audioFileName):
+        dict = {}
+        audioFileName = os.path.basename(audioFileName)
+        sections = audioFileName.split("_")
+        channelSection = sections[1].split("Chan")
+        dateSection = sections[2].split("-")
+        timeSection = sections[3].split("-")
 
-def process_data(dataFrame, audio_file_path):
-    print("hey")
+        dict["Channel"] = channelSection[1]
+        dict["Year"] = dateSection[0]
+        dict["Month"] = dateSection[1]
+        dict["Day"] = dateSection[2]
+        dict["Hour"] = timeSection[0]
+        dict["Minute"] = timeSection[1]
+        dict["Seconds_5"] = timeSection[2]
+
+        return dict
+
+def write_data_to_csv(csv_file_name, file_name, correlation_dict, lag_dict, sampleLocations, ampValues):
+    print("Temp values")
+
+
+
+#Find the right folder for the audio files
+def process_data(dataFrame, audio_file_path, csv_file_name):
     fifteenTime = dataFrame["fifteentime"].tolist()
     time_section = dataFrame["timesection"].tolist()
     file_names = dataFrame["soundfilename"].tolist()
     sample_no = 0
+
+    dataDict = {}
 
     for iterator in range(0,len(fifteenTime)):
         hrs = str(time_section[iterator]).split("_")[0]
@@ -130,8 +171,27 @@ def process_data(dataFrame, audio_file_path):
         sound_files_in_folder = glob.glob(os.path.join(folder_name,"*.wav"))
         matching_files = [i for i in sound_files_in_folder if queryText in i]
 
-        process_audio(matching_files, sample_no, fifteenTime[iterator], folder_name)
+        correlation_dict, lag_dict, sampleLocations, ampValues = process_audio(matching_files, sample_no, fifteenTime[iterator], folder_name)
 
+        write_data_to_csv(csv_file_name, file_names[iterator], correlation_dict, lag_dict, sampleLocations, ampValues)
+        #dataDict[file_names[iterator]] = (correlation_dict, lag_dict)
+
+    return dataDict
+
+def prepare_csv_file(path, filename):
+
+    csvFilePath = os.path.join(path , filename)
+    print(f'Csv Path:{csvFilePath}')
+
+    # Create handler for csv storage file and write header
+    csvFileHandler = open(csvFilePath, "w", newline="")
+    csvWriter = csv.writer(csvFileHandler, delimiter=",")
+    header = ["Filename", "Channel", "Year", "Month", "Day", "Hour", "Minute", "Seconds_5", "Max_intensity",
+              "Max_sample_timing", "Correlation", "Lag"]
+    csvWriter.writerow(header)
+
+    # close the file
+    csvFileHandler.close()
 
 if __name__ == '__main__':
     """
@@ -139,4 +199,13 @@ if __name__ == '__main__':
     name = "D:\\Barn Stuff\\VerificationFile\\trial1_Chan14_2019-12-09_11-15-00to13-00_OnlyVerrifiedCalls_modified.csv"
     dataFrame = pd.read_csv(name)
     audio_file_path = "D:\\Barn Stuff\\AudioSamples"
-    process_data(dataFrame, audio_file_path)
+    # filename for storing data
+    csv_file_name = "manual_corr.csv"
+    prepare_csv_file(audio_file_path, csv_file_name)
+    #
+    process_data(dataFrame, audio_file_path, csv_file_name)
+
+
+
+
+
