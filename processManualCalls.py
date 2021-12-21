@@ -143,6 +143,8 @@ def findInfoFromName(audioFileName):
 
 def write_data_to_csv(csv_file_name, file_name, correlation_dict, lag_dict, sampleLocations, ampValues):
     print("Temp values")
+    csvFileHandler = open(csv_file_name, 'w', newline="")
+    csvWriter = csv.writer(csvFileHandler, delimiter=",")
 
 
 
@@ -173,7 +175,7 @@ def process_data(dataFrame, audio_file_path, csv_file_name):
 
         correlation_dict, lag_dict, sampleLocations, ampValues = process_audio(matching_files, sample_no, fifteenTime[iterator], folder_name)
 
-        
+
 
         write_data_to_csv(csv_file_name, file_names[iterator], correlation_dict, lag_dict, sampleLocations, ampValues)
         #dataDict[file_names[iterator]] = (correlation_dict, lag_dict)
