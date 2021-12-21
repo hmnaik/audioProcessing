@@ -173,6 +173,8 @@ def process_data(dataFrame, audio_file_path, csv_file_name):
 
         correlation_dict, lag_dict, sampleLocations, ampValues = process_audio(matching_files, sample_no, fifteenTime[iterator], folder_name)
 
+        
+
         write_data_to_csv(csv_file_name, file_names[iterator], correlation_dict, lag_dict, sampleLocations, ampValues)
         #dataDict[file_names[iterator]] = (correlation_dict, lag_dict)
 
@@ -187,7 +189,7 @@ def prepare_csv_file(path, filename):
     csvFileHandler = open(csvFilePath, "w", newline="")
     csvWriter = csv.writer(csvFileHandler, delimiter=",")
     header = ["Filename", "Channel", "Year", "Month", "Day", "Hour", "Minute", "Seconds_5", "Max_intensity",
-              "Max_sample_timing", "Correlation", "Lag"]
+              "Max_sample_timing", "Manual_sample_timing", "Correlation", "Lag"]
     csvWriter.writerow(header)
 
     # close the file
