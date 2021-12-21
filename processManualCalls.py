@@ -2,7 +2,26 @@ import math
 import csv
 import pandas as pd
 import os
-#Process
+import glob
+from scipy import signal
+import numpy as np
+import librosa
+
+
+def getSampleData(file, minRange, maxRange):
+    samples, Fs = librosa.load(file, sr=None)
+    if minRange < 0:
+        minRange = 0
+        samples = samples[minRange:maxRange]
+        print(f"Min range breach size: {len(samples)}")
+    elif maxRange > len(samples):
+        maxRange = len(samples)
+        samples = samples[minRange:maxRange]
+        print(f"Max range breach size: {len(samples)}")
+    else:
+        samples = samples[minRange:maxRange]
+
+    return samples
 
 # Find time from the acoustic file
 def find_sampleno_from_call_time(fifteentime):
@@ -16,6 +35,76 @@ def find_sampleno_from_call_time(fifteentime):
     return time_of_call, sample
     #
 
+def process_audio( soundFiles ,  sampleTiming , focalFile, path_to_files):
+    correlationDataDict = {}
+    lagDataDict = {}
+
+    print(f"List of sound files:{soundFiles} ")
+    print(f"Focal file: {focalFile}")
+
+    #focual_index = soundFiles.index(focalFile)
+
+    # Find sample values for all the files
+    #focalFile = [i for i in soundFiles if str(focalChannel) in i]
+
+    min_sample_range = 1000
+    max_sample_range = 3000
+
+    focalFile_path = os.path.join(path_to_files, focalFile[0])
+    #dataOnFocalFile = getSampleData(focalFile_path, sampleTiming - min_sample_range, sampleTiming + max_sample_range)
+
+    for file in soundFiles:
+        # Select the file that is not focal file
+        if file == focalFile:
+            # print("File")
+            correlation = 0
+            correlationDataDict[file] = correlation
+        else:
+            queryFilePath = os.path.join(path_to_files, file)
+            dataOnQueryFile = getSampleData(queryFilePath, sampleTiming - min_sample_range,
+                                            sampleTiming + max_sample_range)
+
+            # plot
+
+            #corr_values = signal.correlate(dataOnQueryFile, dataOnFocalFile, mode="full", method="auto")
+            #maxCorr = np.max(corr_values)
+
+            # find logs
+
+            #lags = signal.correlation_lags(len(dataOnFocalFile), len(dataOnQueryFile), mode="full")
+            #lag = lags[np.argmax(corr_values)]
+
+            # Plotting values
+            # corr_values = numpy.correlate(dataOnFocalFile,dataOnQueryFile)
+            # print(f"Corrleation: {corr_values}")
+            # fig, (ax_orig, ax_noise, ax_corr) = plt.subplots(3, 1, sharex=True)
+            # ax_orig.plot(dataOnFocalFile)
+            #
+            # #ax_orig.plot(clock, sig[clock], 'ro')
+            #
+            # ax_orig.set_title('Focal signal ')
+            #
+            # ax_noise.plot(dataOnQueryFile)
+            #
+            # ax_noise.set_title('Query signal')
+            #
+            # ax_corr.plot(corr_values)
+            #
+            # #ax_corr.plot(clock, corr[clock], 'ro')
+            #
+            # #ax_corr.axhline(0.5, ls=':')
+            #
+            # ax_corr.set_title('Cross-correlated signal')
+            #
+            # #ax_orig.margins(0, 0.1)
+            #
+            # fig.tight_layout()
+            #
+            # plt.show()
+
+            #correlationDataDict[file] = maxCorr
+            #lagDataDict[file] = lag
+
 # Find the right folder for the audio files
 
 def process_data(dataFrame, audio_file_path):
@@ -23,17 +112,25 @@ def process_data(dataFrame, audio_file_path):
     fifteenTime = dataFrame["fifteentime"].tolist()
     time_section = dataFrame["timesection"].tolist()
     file_names = dataFrame["soundfilename"].tolist()
+    sample_no = 0
 
     for iterator in range(0,len(fifteenTime)):
         hrs = str(time_section[iterator]).split("_")[0]
         mins = str(time_section[iterator]).split("_")[1]
         folder_name = os.path.join(audio_file_path, hrs+"-"+mins)
+        print(f'Directory : {folder_name}')
         file_name = os.path.join(folder_name, str(file_names[iterator]))
         if os.path.exists(file_name):
-            print(f'Processing audio file: {folder_name}')
+            print(f'Processing audio file: {file_name}')
             callTime, sample_no = find_sampleno_from_call_time(fifteenTime[iterator])
 
-        queryText = 
+        # Seprate the query text i.e. time --> Hrs-Min-Sec
+        queryText = str(file_names[iterator]).split("_")[3]
+        # Find sound files with same time stamp
+        sound_files_in_folder = glob.glob(os.path.join(folder_name,"*.wav"))
+        matching_files = [i for i in sound_files_in_folder if queryText in i]
+
+        process_audio(matching_files, sample_no, fifteenTime[iterator], folder_name)
 
 
 if __name__ == '__main__':
