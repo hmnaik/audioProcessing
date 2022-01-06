@@ -1,4 +1,12 @@
 
+'''
+The file is created to computer cross correlation between the audio samples.
+This program depends on the output of another file - callComparison.py
+A typical *.csv input to this file contains information about loudest channel among the 23 channels, for each 5 second clip.
+The sample timing of loudest channel is noted and samples along the same timeline are extracted from the other channels to compare similarity of the signal.
+This allows us to identify how similar are the calls and ideally channels would report samples near or father from the current channel.
+'''
+
 import os
 import pandas as pd
 import librosa
@@ -9,8 +17,22 @@ from matplotlib import pyplot as plt
 def getSampleData(file, minRange, maxRange):
     #work out padding
     samples, Fs = librosa.load(file, sr=None)
-    samples = samples[minRange:maxRange]
-    #print(f"Size: {len(samples)}")
+    if minRange < 0:
+        #paddingSamples = [0] * abs(minRange)
+        #samples = paddingSamples + samples
+        minRange = 0
+        samples = samples[minRange:maxRange]
+        print(f"Min range breach size: {len(samples)}")
+    elif maxRange > len(samples):
+        #paddingSamples = [0] * abs(maxRange-len(samples))
+        #samples =  samples + paddingSamples
+        maxRange = len(samples)
+        samples = samples[minRange:maxRange]
+        print(f"Max range breach size: {len(samples)}")
+    else:
+        samples = samples[minRange:maxRange]
+       # print(f"Size: {len(samples)}")
+
     return samples
 
 def find_correlation_points(soundFiles, sampleTiming, focalChannel, path_to_files):
@@ -44,6 +66,7 @@ def find_correlation_points(soundFiles, sampleTiming, focalChannel, path_to_file
             #plot
 
             #print(corr_values)
+
             lags = signal.correlation_lags(len(dataOnFocalFile),len(dataOnQueryFile), mode = "full")
             lag = lags [np.argmax(corr_values)]
             #corr_values = numpy.correlate(dataOnFocalFile,dataOnQueryFile)
@@ -76,8 +99,6 @@ def find_correlation_points(soundFiles, sampleTiming, focalChannel, path_to_file
             correlationDataDict[file] = maxCorr
             lagDataDict[file] = lag
 
-            print("Waiting")
-
     return correlationDataDict,lagDataDict
 
 def process_dataset(dataSet, noOfChannels, path_to_files):
@@ -93,9 +114,6 @@ def process_dataset(dataSet, noOfChannels, path_to_files):
 
     # Go through each index on the dataset and select all the channels
     for index in indexList:
-        print(f"index: {index}")
-        if index == 528:
-            print("Now")
         # Get the subset of the dataset
         subsetDataFrame = dataSet.iloc[index : index + noOfChannels]
         print(f"Size: {subsetDataFrame.shape}")
@@ -134,12 +152,65 @@ if __name__ == '__main__':
     """
     """
 
-    path_to_files = "D:\\Barn Stuff\\AudioSamples"
-    path_database = os.path.join(path_to_files, "updated_dataBase.csv")
+    path = "X:\\Nora_Data\\For Barn Methods\\Starling_Audio"
 
-    dataSet = pd.read_csv(path_database)
-    noOfChannels = 23
-    updated_dataset = process_dataset(dataSet, noOfChannels, path_to_files)
-    final_file = os.path.join(path_to_files, "correlation.csv")
-    updated_dataset.to_csv(final_file, index = False)
+    # Define directories to go through
+    folderNames = ["8th", "9th", "10th"]
+    hours = ["11", "12", "13"]
+    mins = ["00", "15", "30", "45"]
 
+    # Create a list of directories from the defined directory names
+    pathList = []
+    for dir in folderNames:
+        path_with_date = os.path.join(path, dir)
+        for hour in hours:
+            for min in mins:
+                time = hour + "-" + min
+                path_with_date_hour_min = os.path.join(path_with_date, time)
+                # Add only those directories that exist
+                if os.path.exists(path_with_date_hour_min):
+                    pathList.append(path_with_date_hour_min)
+                    print(path_with_date_hour_min)
+
+    for path in pathList:
+        path_database = os.path.join(path, "updated_dataBase.csv")
+        if os.path.exists(path_database):
+            print(f'*.csv exists : {path_database} ')
+            dataSet = pd.read_csv(path_database)
+            noOfChannels = 23
+            updated_dataset = process_dataset(dataSet, noOfChannels, path)
+            final_file = os.path.join(path, "correlation.csv")
+            updated_dataset.to_csv(final_file, index=False)
+        else:
+            print(f" *.csv does not exist: {path_database}")
+
+    # path_to_files = "X:\\Nora_Data\\For Barn Methods\\Starling_Audio"
+    #
+    # startHours = [12, 13]
+    # startMins = [0, 15, 30, 45]
+    #
+    # for startHour in startHours:
+    #     for startMin in startMins:
+    #
+    #         #final_dataset = process_given_folder(path_to_files, startHour, startMin)
+    #         if startMin < 10:
+    #             final_path = os.path.join(path_to_files,str(startHour)+ "-" + "0" +str(startMin))
+    #         else:
+    #             final_path = os.path.join(path_to_files, str(startHour) + "-" + str(startMin))
+    #
+    #         if os.path.exists(final_path):
+    #             print(f'Query : {final_path} ')
+    #             path_database = os.path.join(final_path, "updated_dataBase.csv")
+    #             if os.path.exists(path_database):
+    #                 print(f'*.csv exists : {path_database} ')
+    #                 dataSet = pd.read_csv(path_database)
+    #                 noOfChannels = 23
+    #                 updated_dataset = process_dataset(dataSet, noOfChannels, final_path)
+    #                 final_file = os.path.join(final_path, "correlation.csv")
+    #                 updated_dataset.to_csv(final_file, index=False)
+    #             else:
+    #                 print(f" *.csv does not exist: {path_database}")
+    #         else:
+    #             print(f'Query : {final_path} does not exist ')
+    #             #print(f'Query : {startHour}-{startMin} : Folder can not be found')
+    #

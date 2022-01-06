@@ -1,5 +1,9 @@
-### The file is used to read the manual file created by Nora, all call timings marked manually are
-### associated with a particular .wav file accoding to the timing of the recording.
+'''
+This file was designed to read the manual annotation made by Nora. The file will read the file and create a csv out of it.
+Moreover, each file is assigned to its *.wav file, this way automated analysis is simplified.
+
+The annotation is time noted for the call.
+'''
 
 import math
 import csv
@@ -12,9 +16,10 @@ def find_time_stamp(fifteentime):
     return mins, seconds
 
 def read_File(filename):
+    print("Read files")
     filename_without_extension = filename.split(".txt")[0]
     filename_with_extension = filename_without_extension + "_modified" + ".txt"
-    csvFileName = filename_without_extension + "_modifiedTemp" + ".csv"
+    csvFileName = filename_without_extension + "_modified" + ".csv"
 
     csvFileHandler = open(csvFileName,'w', newline= "")
     csvWriter = csv.writer(csvFileHandler, delimiter = ",")
@@ -49,6 +54,8 @@ def read_File(filename):
                 #listOfValues.append(str(basemins + mins))
                 if base_seconds < 10:
                     base_seconds = "0" + str(base_seconds)
+                if total_mins < 10:
+                    total_mins = "0"+str(total_mins)
                 #listOfValues.append(str(base_seconds) )
                 # Create name of the audio file
                 audioFileName = wavFilePrefix + str(base_hour) + "-" + str(total_mins) + "-" + str(base_seconds) + wavFileSuffix

@@ -1,3 +1,10 @@
+'''
+This file would pick up the output of callIdentifies.py. This script picks up the channel that reports highest intensity of sound
+within a 5 second recording. The sample timing of the loudest channel is idenfied as primary channel assumed to be closest to the source.
+This scrip takes the timing of the sample of the loudest channel, then finds samples with highest intensity along the same time window in other channels.
+This way we can narrow down the calls to one single sound and possibly try to triangulate the sound.
+'''
+
 import os
 import pandas as pd
 import librosa
@@ -54,9 +61,12 @@ def findMaxValues(path_to_files,file_names,sample_min, sample_max):
         x, Fs = librosa.load(fn_wav, sr=None)
         if sample_max > 500000:
             sample_max = 500000
+        if sample_min < 0:
+            sample_min = 0
 
         # Fine sample values
         selected_sample_values = x[sample_min:sample_max]
+        print(f'Sample size : {len(selected_sample_values)}')
         maxAmp = max(selected_sample_values)
 
         # The implementation below is to avoid a bug, that if any similar value exist outside the range then we would not really get the right index
@@ -70,29 +80,28 @@ def findMaxValues(path_to_files,file_names,sample_min, sample_max):
 
     return sample_locations, amp_values
 
+def process_given_folder (path_to_files, startHour, startMin, secondStart = 0):
 
-if __name__ == "__main__":
-    """
-    """
-    path_to_files = "D:\\Barn Stuff\\AudioSamples"
+    startMin_str = str(startMin)
+    if startMin < 10:
+        startMin_str = "0" + startMin_str
+    path_to_files = os.path.join(path_to_files, str(startHour) + "-" + str(startMin_str))
+    path_database = os.path.join(path_to_files, "database.csv")
+    if os.path.exists(path_database) == False:
+        return False
 
-    path_to_files_testing = "D:\\Barn Stuff\\AudioSamples"
-
-    path_database = os.path.join(path_to_files_testing,"database.csv")
-    startHour = 11
-    startMin = 15
-    endMin = startMin + 15
-    seconds = [i for i in range(0,60,5)]
+    timeInterval = 15
+    endMin = startMin + timeInterval
+    seconds = [i for i in range(secondStart, 60, 5)]
     min_sample_range = 1000
     max_sample_range = 3000
 
     dataBase = read_csv(path_database)
-
     updatedDataBase = []
     min = startMin
     while min < endMin:
         for sec in seconds:
-            query_str = get_query_value(startHour,min,sec)
+            query_str = get_query_value(startHour, min, sec)
             data_subset = grab_data_for_given_query(dataBase.copy(), query_str)
             print(f'Query: {query_str} : Data Size : {data_subset.shape} ')
             if data_subset.empty:
@@ -102,18 +111,58 @@ if __name__ == "__main__":
             # All file names
             file_names = data_subset["Filename"]
 
-            sample_locations, amp_values = findMaxValues(path_to_files, file_names, sample_number-min_sample_range, sample_number+max_sample_range)
-            # print(f'Max sample:{sample_number}')
-            # print(f"Sameple range : {sample_number-1000} - {sample_number+3000}")
-            # print(f'Old Intensity: {data_subset["Max_intensity"].tolist()}\n New Val: {amp_values}') # :{data_subset["Max_sample_timing"]}
-            # print(f'Old Sample Number : {data_subset["Max_sample_timing"].tolist()} \n New value: {sample_locations}')
+            sample_locations, amp_values = findMaxValues(path_to_files, file_names, sample_number - min_sample_range,
+                                                         sample_number + max_sample_range)
 
             data_subset["Max_intensity"] = amp_values
             data_subset["Max_sample_timing"] = sample_locations
 
             updatedDataBase.append(data_subset)
-            min = min + 1
 
+        min = min + 1
     final_dataset = pd.concat(updatedDataBase)
     newFileName = os.path.join(path_to_files, "updated_dataBase.csv")
-    final_dataset.to_csv(newFileName, index= False)
+    final_dataset.to_csv(newFileName, index=False)
+    return True
+
+
+if __name__ == "__main__":
+    """
+    """
+
+    path = "X:\\Nora_Data\\For Barn Methods\\Starling_Audio"
+
+    # Define directories to go through
+    dir_with_dates = ["7th", "8th", "9th", "10th"]
+    dir_with_dates = ["8th","9th"]
+    for dir in dir_with_dates:
+
+        startSec = 0
+
+        path_to_files = os.path.join(path,dir)
+        if os.path.exists(path_to_files):
+            print(f' Processing file: {path_to_files}')
+            startHours = [11,12, 13]
+            startMins = [0,15,30,45]
+            # The structure of processing files is slightly different because minutes and hours are crucial to find right files to process and compare.
+            for startHour in startHours:
+                for startMin in startMins:
+                    # Special case with the dataset
+                    if dir == "7th" and startHour== 11 : # Covers 7th//11-15,11-30,11-45
+                        startSec = 2
+                    elif dir == "7th" and startHour== 12 and startMin == 0: # 7th//12-00
+                        startSec = 2
+                    elif dir == "7th" and startHour== 12 and startMin != 0: # 7th//
+                        startSec = 1
+                    elif dir == "7th" and startHour== 13: # 7th//
+                        startSec = 1
+                    elif dir == "8th":
+                        startSec = 3
+                    else:
+                        startSec = 0
+
+                    final_dataset = process_given_folder(path_to_files, startHour, startMin, startSec)
+                    if final_dataset == False:
+                        print(f'Query : {startHour}-{startMin}  can not be found')
+        else:
+            print(f'Path does not exist : {path_to_files}')
