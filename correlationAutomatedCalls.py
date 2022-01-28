@@ -1,4 +1,3 @@
-
 '''
 The file is created to computer cross correlation between the audio samples.
 This program depends on the output of another file - callComparison.py
@@ -35,15 +34,13 @@ def getSampleData(file, minRange, maxRange):
 
     return samples
 
-def find_correlation_points(soundFiles, sampleTiming, focalChannel, path_to_files):
+def find_correlation_points(soundFiles, sampleTiming, focalChannel, path_to_files, min_sample_range = 1000, max_sample_range = 3000):
     correlationDataDict = {}
     lagDataDict = {}
 
     # Find sample values for all the files
     focalFile = [i for i in soundFiles if str(focalChannel) in i ]
 
-    min_sample_range = 1000
-    max_sample_range = 3000
     focalFile_path = os.path.join(path_to_files, focalFile[0])
     dataOnFocalFile = getSampleData(focalFile_path, sampleTiming-min_sample_range, sampleTiming+max_sample_range)
 
@@ -58,13 +55,10 @@ def find_correlation_points(soundFiles, sampleTiming, focalChannel, path_to_file
             dataOnQueryFile = getSampleData(queryFilePath, sampleTiming-min_sample_range, sampleTiming+max_sample_range)
 
             #plot
-
-
             corr_values= signal.correlate( dataOnQueryFile, dataOnFocalFile , mode="full", method= "auto")
             maxCorr = np.max(corr_values)
 
             #plot
-
             #print(corr_values)
 
             lags = signal.correlation_lags(len(dataOnFocalFile),len(dataOnQueryFile), mode = "full")
@@ -101,7 +95,7 @@ def find_correlation_points(soundFiles, sampleTiming, focalChannel, path_to_file
 
     return correlationDataDict,lagDataDict
 
-def process_dataset(dataSet, noOfChannels, path_to_files):
+def process_dataset(dataSet, noOfChannels, path_to_files, min_sample_range = 1000, max_sample_range = 3000):
 
     # Take subset of first 23 channels
     totalSequence = int(dataSet.shape[0]/noOfChannels)
@@ -126,10 +120,8 @@ def process_dataset(dataSet, noOfChannels, path_to_files):
 
         #list of files
         files = subsetDataFrame["Filename"].tolist()
-        # min_sample_range = 1000
-        # max_sample_range = 3000
 
-        dataDict, lagDict = find_correlation_points(files, sampleTiming, focalChannel, path_to_files)
+        dataDict, lagDict = find_correlation_points(files, sampleTiming, focalChannel, path_to_files,  min_sample_range, max_sample_range)
         listOfCorrVal = list(dataDict.values())
         list_of_correlation = list_of_correlation + listOfCorrVal
         #print(len(list_of_correlation))
@@ -151,66 +143,61 @@ def process_dataset(dataSet, noOfChannels, path_to_files):
 if __name__ == '__main__':
     """
     """
+    starlingData = False
+    if starlingData == True:
+        path = "X:\\Nora_Data\\For Barn Methods\\Starling_Audio"
 
-    path = "X:\\Nora_Data\\For Barn Methods\\Starling_Audio"
+        # Define directories to go through
+        folderNames = ["8th", "9th", "10th"]
+        hours = ["11", "12", "13"]
+        mins = ["00", "15", "30", "45"]
 
-    # Define directories to go through
-    folderNames = ["8th", "9th", "10th"]
-    hours = ["11", "12", "13"]
-    mins = ["00", "15", "30", "45"]
+        # Create a list of directories from the defined directory names
+        pathList = []
+        for dir in folderNames:
+            path_with_date = os.path.join(path, dir)
+            for hour in hours:
+                for min in mins:
+                    time = hour + "-" + min
+                    path_with_date_hour_min = os.path.join(path_with_date, time)
+                    # Add only those directories that exist
+                    if os.path.exists(path_with_date_hour_min):
+                        pathList.append(path_with_date_hour_min)
+                        print(path_with_date_hour_min)
 
-    # Create a list of directories from the defined directory names
-    pathList = []
-    for dir in folderNames:
-        path_with_date = os.path.join(path, dir)
-        for hour in hours:
-            for min in mins:
-                time = hour + "-" + min
-                path_with_date_hour_min = os.path.join(path_with_date, time)
-                # Add only those directories that exist
-                if os.path.exists(path_with_date_hour_min):
-                    pathList.append(path_with_date_hour_min)
-                    print(path_with_date_hour_min)
+        for path in pathList:
+            path_database = os.path.join(path, "updated_dataBase.csv")
+            if os.path.exists(path_database):
+                print(f'*.csv exists : {path_database} ')
+                dataSet = pd.read_csv(path_database)
+                noOfChannels = 23
+                updated_dataset = process_dataset(dataSet, noOfChannels, path)
+                final_file = os.path.join(path, "correlation.csv")
+                updated_dataset.to_csv(final_file, index=False)
+            else:
+                print(f" *.csv does not exist: {path_database}")
+    else:
+        path = "X:\\Mate_Data\\MALTA_Recordings\\2021_05_11"
 
-    for path in pathList:
-        path_database = os.path.join(path, "updated_dataBase.csv")
-        if os.path.exists(path_database):
-            print(f'*.csv exists : {path_database} ')
-            dataSet = pd.read_csv(path_database)
-            noOfChannels = 23
-            updated_dataset = process_dataset(dataSet, noOfChannels, path)
-            final_file = os.path.join(path, "correlation.csv")
-            updated_dataset.to_csv(final_file, index=False)
-        else:
-            print(f" *.csv does not exist: {path_database}")
+        folderNames = ["batlure"]  # , "barnoutline", "batluremoving", "birdcalls", "mobile", "mobile2", "static"]
 
-    # path_to_files = "X:\\Nora_Data\\For Barn Methods\\Starling_Audio"
-    #
-    # startHours = [12, 13]
-    # startMins = [0, 15, 30, 45]
-    #
-    # for startHour in startHours:
-    #     for startMin in startMins:
-    #
-    #         #final_dataset = process_given_folder(path_to_files, startHour, startMin)
-    #         if startMin < 10:
-    #             final_path = os.path.join(path_to_files,str(startHour)+ "-" + "0" +str(startMin))
-    #         else:
-    #             final_path = os.path.join(path_to_files, str(startHour) + "-" + str(startMin))
-    #
-    #         if os.path.exists(final_path):
-    #             print(f'Query : {final_path} ')
-    #             path_database = os.path.join(final_path, "updated_dataBase.csv")
-    #             if os.path.exists(path_database):
-    #                 print(f'*.csv exists : {path_database} ')
-    #                 dataSet = pd.read_csv(path_database)
-    #                 noOfChannels = 23
-    #                 updated_dataset = process_dataset(dataSet, noOfChannels, final_path)
-    #                 final_file = os.path.join(final_path, "correlation.csv")
-    #                 updated_dataset.to_csv(final_file, index=False)
-    #             else:
-    #                 print(f" *.csv does not exist: {path_database}")
-    #         else:
-    #             print(f'Query : {final_path} does not exist ')
-    #             #print(f'Query : {startHour}-{startMin} : Folder can not be found')
-    #
+        # Create a list of directories from the defined directory names
+        pathList = []
+        for dir in folderNames:
+            path_with_dir = os.path.join(path, dir)
+            # Add only those directories that exist
+            if os.path.exists(path_with_dir):
+                pathList.append(path_with_dir)
+                print(path_with_dir)
+
+        for path in pathList:
+            path_database = os.path.join(path, "updated_dataBase.csv")
+            if os.path.exists(path_database):
+                print(f'*.csv exists : {path_database} ')
+                dataSet = pd.read_csv(path_database)
+                noOfChannels = 30
+                updated_dataset = process_dataset(dataSet, noOfChannels, path,  min_sample_range = 1000*3, max_sample_range = 3000*3)
+                final_file = os.path.join(path, "correlation.csv")
+                updated_dataset.to_csv(final_file, index=False)
+            else:
+                print(f" *.csv does not exist: {path_database}")

@@ -1,7 +1,8 @@
-# This is a sample Python script.
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+'''
+Part 1: This file is created to skim through all 5 second sound clips from all the channels and then pick our the one which has maximum sound intensity.
+The output is a file that suggests maximum intensity recorded within the given *.wav file and the timing of the sample.
+THe assumption is that loudest noise is the relevant noise, of course there could be more calls in the five seconds but for now we consider a simple model.
+'''
 
 import os
 import numpy as np
@@ -67,13 +68,15 @@ def plot_intensities(ampDict):
     #plt.show()
     plt.savefig("plotIntensities.jpg")
 
-def findInfoFromName(audioFileName):
+def findInfoFromName(audioFileName, lengthOfAudio):
     dict = {}
     audioFileName = os.path.basename(audioFileName)
     sections = audioFileName.split("_")
-    channelSection = sections[1].split("Chan")
-    dateSection = sections[2].split("-")
-    timeSection = sections[3].split("-")
+    # Selection done from behind because some files have _ in their names and this makes things confusing but
+    # naming protocol seems robust if we see if backwards
+    channelSection = sections[-5].split("Chan")
+    dateSection = sections[-4].split("-")
+    timeSection = sections[-3].split("-")
 
     dict["Channel"] = channelSection[1]
     dict["Year"] = dateSection[0]
@@ -81,7 +84,7 @@ def findInfoFromName(audioFileName):
     dict["Day"] = dateSection[2]
     dict["Hour"] = timeSection[0]
     dict["Minute"] = timeSection[1]
-    dict["Seconds_5"] = timeSection[2]
+    dict["Seconds"+"_"+str(lengthOfAudio)] = timeSection[2]
 
     return dict
 
@@ -96,33 +99,78 @@ def create_empty_dict(list):
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     # Path for the audio files
-    path = "D:\\Barn Stuff\\AudioSamples"
-    # get list of all the audio files (*.wav) from the given path
-    filenames = read_files(path)
+    #path = "D:\\Barn Stuff\\AudioSamples"
+    starlingData = False
+    pathList = []
+    if starlingData:
+        path = "X:\\Nora_Data\\For Barn Methods\\Starling_Audio"
 
-    # filename for storing data
-    csvFile = "dataBase.csv"
-    csvFilePath = os.path.join(path,csvFile)
-    print(f'Path:{csvFilePath}')
+        # Define directories to go through
+        #folderNames = ["7th","8th","9th","10th"]
 
-    # Create handler for csv storage file and write header
-    csvFileHandler = open(csvFilePath, "w", newline="")
-    csvWriter = csv.writer(csvFileHandler, delimiter = ",")
-    header = ["Filename", "Channel", "Year", "Month", "Day", "Hour", "Minute","Seconds_5", "Max_intensity", "Max_sample_timing"]
-    csvWriter.writerow(header)
+        folderNames = ["8th","9th"]
+        hours = ["11","12","13"]
+        mins = ["00","15","30","45"]
 
-    # Create empty dict
-    dataDict = create_empty_dict(header)
-    # Go through each file and extract call amplitudes etc.
-    for name in filenames:
-        dateTimeInfo_dict = findInfoFromName(name)
-        dataDict.update(dateTimeInfo_dict)
-        dataDict["Filename"] = os.path.basename(name)
-        dataDict["Max_intensity"], dataDict["Max_sample_timing"] = read_audio(name)
-        print(f'File:{name}')
-        # Get all values as list
-        values = list(dataDict.values())
-        csvWriter.writerow(values)
+        # Create a list of directories from the defined directory names
+        pathList = []
+        for dir in folderNames:
+            path_with_date = os.path.join(path,dir)
+            for hour in hours:
+                for min in mins:
+                    time = hour + "-" + min
+                    path_with_date_hour_min = os.path.join(path_with_date,time)
+                    # Add only those directories that exist
+                    if os.path.exists(path_with_date_hour_min):
+                        pathList.append(path_with_date_hour_min)
+                        print(path_with_date_hour_min)
+    else:
+        path = "X:\\Mate_Data\\MALTA_Recordings\\2021_05_11"
 
-    #close the file
-    csvFileHandler.close()
+        #folderNames = ["batlure", "barnoutline", "batluremoving", "birdcalls", "mobile", "mobile2", "static"]
+        folderNames = ["batluremoving", "birdcalls", "mobile", "mobile2", "static"]
+        pathList = []
+        for dir in folderNames:
+            path_with_dir = os.path.join(path,dir)
+            if os.path.exists(path_with_dir):
+                pathList.append(path_with_dir)
+                print(path_with_dir)
+
+
+
+    # Go through each path and process each folder
+    for path in pathList:
+
+        # get list of all the audio files (*.wav) from the given path
+        filenames = read_files(path)
+        lengthOfAudio = 0
+        if starlingData:
+            lengthOfAudio = 5 # in seconds
+        else:
+            lengthOfAudio = 10
+        # filename for storing data
+        csvFile = "dataBase.csv"
+        csvFilePath = os.path.join(path,csvFile)
+        print(f'Path:{csvFilePath}')
+
+        # Create handler for csv storage file and write header
+        csvFileHandler = open(csvFilePath, "w", newline="")
+        csvWriter = csv.writer(csvFileHandler, delimiter = ",")
+        header = ["Filename", "Channel", "Year", "Month", "Day", "Hour", "Minute","Seconds" + "_" + str(lengthOfAudio), "Max_intensity", "Max_sample_timing"]
+        csvWriter.writerow(header)
+
+        # Create empty dict
+        dataDict = create_empty_dict(header)
+        # Go through each file and extract call amplitudes etc.
+        for name in filenames:
+            dateTimeInfo_dict = findInfoFromName(name, lengthOfAudio)
+            dataDict.update(dateTimeInfo_dict)
+            dataDict["Filename"] = os.path.basename(name)
+            dataDict["Max_intensity"], dataDict["Max_sample_timing"] = read_audio(name)
+            print(f'File:{name}')
+            # Get all values as list
+            values = list(dataDict.values())
+            csvWriter.writerow(values)
+
+        #close the file
+        csvFileHandler.close()
