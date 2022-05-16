@@ -1,4 +1,5 @@
 '''
+Manual processing part 2 : 
 This files is designed to read the manually annotated file created by Nora.
 We read the call timings and find the audio signal from corresponding audio of the corresponding channel.
 Then we extract samples from recording of the other channels at the same time to perform cross correlation.

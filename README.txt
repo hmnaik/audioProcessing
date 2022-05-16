@@ -1,11 +1,8 @@
 # Audio Processing
 
 -- Part 1
-* Process audio files
-* Call identifier
-* Collect data from audio files and cross correlation.
 
-File order for processing.
+Automated processing for the data recorded by microphnes. 
 1. callIdentifier.py
 The file processes audio files given in a particular directory. These files usually contain sound recording of all microphones. This script will process all audio files and for each time duration finds the 
 channel that records maximum intensity of sound. This channel is our first approximation to locate the sound source. We record intensity and the time of the sound w.r.t the recording file. 
@@ -13,7 +10,19 @@ channel that records maximum intensity of sound. This channel is our first appro
 The script, collects timing and intensity of sound in each clip. The file from callIdentifier.py is processed for each time duration. We identify the channel that records the loudes sound among all channels. 
 Based on the timing of the loudest sound, we process all audio files only for time window that is closer to loudest sound. Then we pick the loudest sound in this time window. This allows us to identify recording of a
 single sound from all channels. We assume that it is easy to identify loudest sound. 
-3. 
+3. correlateAutomatedCalls.py
+The scipt will take results from callComparison.py and compute cross correlation between the files. This allows us to find the time delay between the focal signal and all the other signals. 
+This data is finally used to triangular the sound source to get 3D location of the sound. 
+
+Manual processing for the data gathered by manual processing. 
+1. readTextFile.py 
+The text file contains name of the .wav file that is manually annotated for bird calls, along with the timing. 
+The script creates .csv file from the given file for computing cross correlation. 
+The workflow differs with the automated processing in a way tha callIdentifier.py is skipped. The callComparison.py is 
+used with the given annotations. 
+
+2. processManualCalls.py
+The script creates cross correlation from the annotated data. The processing is same as the automated method explained earlier. 
 
 -- Part 2
 * Process combined data for audio localization.

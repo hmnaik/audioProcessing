@@ -1,5 +1,5 @@
 '''
-The file is created to computer cross correlation between the audio samples.
+Part 3: The file is created to computer cross correlation between the audio samples.
 This program depends on the output of another file - callComparison.py
 A typical *.csv input to this file contains information about loudest channel among the 23 channels, for each 5 second clip.
 The sample timing of loudest channel is noted and samples along the same timeline are extracted from the other channels to compare similarity of the signal.
@@ -16,27 +16,43 @@ from scipy import signal
 from matplotlib import pyplot as plt
 
 def getSampleData(file, minRange, maxRange):
-    #work out padding
+    """
+    The function extracts sample values of the given sound file for the given time range
+    :param file: str
+    :param minRange: int
+    :param maxRange: int
+    :return: list
+    """
+
+    #todo: Workout plan to do padding of data
+
     samples, Fs = librosa.load(file, sr=None)
     if minRange < 0:
-        #paddingSamples = [0] * abs(minRange)
-        #samples = paddingSamples + samples
         minRange = 0
         samples = samples[minRange:maxRange]
         print(f"Min range breach size: {len(samples)}")
     elif maxRange > len(samples):
-        #paddingSamples = [0] * abs(maxRange-len(samples))
-        #samples =  samples + paddingSamples
         maxRange = len(samples)
         samples = samples[minRange:maxRange]
         print(f"Max range breach size: {len(samples)}")
     else:
         samples = samples[minRange:maxRange]
-       # print(f"Size: {len(samples)}")
 
     return samples
 
 def find_correlation_points(soundFiles, sampleTiming, focalChannel, path_to_files, min_sample_range = 1000, max_sample_range = 3000):
+    """
+    The function compute correlation (similarity) between the given sound files. The function is given all necessary infromation to
+    clip the required sampling range from audio file. The funtion finds similarity between the focal signal and
+    other channel for same time range. The return is correlation value and the time lag.
+    :param soundFiles: list
+    :param sampleTiming: int
+    :param focalChannel: int
+    :param path_to_files: str
+    :param min_sample_range: int
+    :param max_sample_range: int
+    :return: dict, dict
+    """
     correlationDataDict = {}
     lagDataDict = {}
 
@@ -65,6 +81,8 @@ def find_correlation_points(soundFiles, sampleTiming, focalChannel, path_to_file
 
             lags = signal.correlation_lags(len(dataOnFocalFile),len(dataOnQueryFile), mode = "full")
             lag = lags [np.argmax(corr_values)]
+
+            # The following code provides graph of the correlation function if needed
             #corr_values = numpy.correlate(dataOnFocalFile,dataOnQueryFile)
             #print(f"Corrleation: {corr_values}")
             # fig, (ax_orig, ax_noise, ax_corr) = plt.subplots(3, 1, sharex=True)
@@ -98,8 +116,18 @@ def find_correlation_points(soundFiles, sampleTiming, focalChannel, path_to_file
     return correlationDataDict,lagDataDict
 
 def process_dataset(dataSet, noOfChannels, path_to_files, min_sample_range = 1000, max_sample_range = 3000):
+    """
+    Provide information about the dataset to be processed. The information given is no. of channels, .csv file having
+    information about the dataset and the user can define the range of samples that have to be considered for finding similarity between two signals.
+    :param dataSet: dataFrame
+    :param noOfChannels: int
+    :param path_to_files: str
+    :param min_sample_range: int
+    :param max_sample_range: int
+    :return: dataFrame
+    """
 
-    # Take subset of first 23 channels
+    # Determine the number of sequeces offered in the given data structure. Each sequence is of X seconds.
     totalSequence = int(dataSet.shape[0]/noOfChannels)
 
     # Create the list of indexes
@@ -113,6 +141,7 @@ def process_dataset(dataSet, noOfChannels, path_to_files, min_sample_range = 100
         # Get the subset of the dataset
         subsetDataFrame = dataSet.iloc[index : index + noOfChannels]
         print(f"Size: {subsetDataFrame.shape}")
+
         # Find the point with max intensity
         idMaxSample = subsetDataFrame["Max_intensity"].idxmax()
         # From the id get the sample point
@@ -126,17 +155,16 @@ def process_dataset(dataSet, noOfChannels, path_to_files, min_sample_range = 100
         dataDict, lagDict = find_correlation_points(files, sampleTiming, focalChannel, path_to_files,  min_sample_range, max_sample_range)
         listOfCorrVal = list(dataDict.values())
         list_of_correlation = list_of_correlation + listOfCorrVal
-        #print(len(list_of_correlation))
 
         listOfLagVal = list(lagDict.values())
         list_of_lag = list_of_lag + listOfLagVal
 
         print(f" lag values :{len(list_of_lag)} - lag values in the session : {len(listOfLagVal)}")
 
-
     # Find max intensity value and corresponding sample value (index)
     dataSet["Correlation"] = list_of_correlation
     dataSet["Lag"] = list_of_lag
+
     # Define sample range around the sample value
     return dataSet
 
@@ -144,8 +172,11 @@ def process_dataset(dataSet, noOfChannels, path_to_files, min_sample_range = 100
 
 if __name__ == '__main__':
     """
+    The file process the data given for the dataset. The structure of dataset defines the processing sequence. 
+    We provide two ways of processing the data. 
     """
     starlingData = False
+    ## Format one : Dir\Date\time
     if starlingData == True:
         path = "X:\\Nora_Data\\For Barn Methods\\Starling_Audio"
 
@@ -178,6 +209,7 @@ if __name__ == '__main__':
                 updated_dataset.to_csv(final_file, index=False)
             else:
                 print(f" *.csv does not exist: {path_database}")
+    # Format 2 : Dir \\ Name
     else:
         path = "X:\\Mate_Data\\MALTA_Recordings\\2021_05_11"
 

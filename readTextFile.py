@@ -1,4 +1,5 @@
 '''
+Manual processing part 1
 This file was designed to read the manual annotation made by Nora. The file will read the file and create a csv out of it.
 Moreover, each file is assigned to its *.wav file, this way automated analysis is simplified.
 
