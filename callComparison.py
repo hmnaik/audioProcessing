@@ -4,6 +4,7 @@ within a 5 second recording. The sample timing of the loudest channel is idenfie
 This scrip takes the timing of the sample of the loudest channel, then finds samples with highest intensity along the same time window in other channels.
 This way we can narrow down the calls to one single sound and possibly try to triangulate the sound.
 '''
+# Author : Hemal Naik
 
 import os
 import pandas as pd

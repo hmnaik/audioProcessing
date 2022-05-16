@@ -3,6 +3,7 @@ Part 1: This file is created to skim through all 5 second sound clips from all t
 The output is a file that suggests maximum intensity recorded within the given *.wav file and the timing of the sample.
 THe assumption is that loudest noise is the relevant noise, of course there could be more calls in the five seconds but for now we consider a simple model.
 '''
+# Author : Hemal Naik
 
 import os
 import numpy as np

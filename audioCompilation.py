@@ -1,6 +1,8 @@
 # Read files and combine audio information.
 # The file uses the files *csv provided from the optimization algorithm and uses it to compile audio file.
 
+# Author : Hemal Naik
+
 import os
 import glob
 import pandas as pd

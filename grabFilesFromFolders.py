@@ -1,4 +1,5 @@
 ## This file is purely created to copy files from one place to another
+# Author : Hemal Naik
 
 import os
 import shutil

@@ -4,6 +4,7 @@ Moreover, each file is assigned to its *.wav file, this way automated analysis i
 
 The annotation is time noted for the call.
 '''
+# Author : Hemal Naik
 
 import math
 import csv

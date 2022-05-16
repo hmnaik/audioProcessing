@@ -6,6 +6,8 @@ The sample timing of loudest channel is noted and samples along the same timelin
 This allows us to identify how similar are the calls and ideally channels would report samples near or father from the current channel.
 '''
 
+# Author : Hemal Naik
+
 import os
 import pandas as pd
 import librosa
