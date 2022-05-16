@@ -24,8 +24,11 @@ used with the given annotations.
 2. processManualCalls.py
 The script creates cross correlation from the annotated data. The processing is same as the automated method explained earlier. 
 
+
+
 -- Part 2
 * Process combined data for audio localization.
+
 -- Part 3
 * Process final results to get combined audio files.
 

@@ -1,3 +1,4 @@
+# The script is used to combine the .wav files given in the folder. 
 # Author : Hemal Naik
 
 import glob

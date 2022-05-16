@@ -1,4 +1,4 @@
-## This file is purely created to copy files from one place to another
+## This file is purely created to copy files from one location to another.
 # Author : Hemal Naik
 
 import os
