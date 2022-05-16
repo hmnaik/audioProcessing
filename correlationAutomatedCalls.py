@@ -179,7 +179,7 @@ if __name__ == '__main__':
     else:
         path = "X:\\Mate_Data\\MALTA_Recordings\\2021_05_11"
 
-        folderNames = ["batlure"]  # , "barnoutline", "batluremoving", "birdcalls", "mobile", "mobile2", "static"]
+        folderNames = ["batlure", "barnoutline", "batluremoving", "birdcalls", "mobile", "mobile2", "static"]
 
         # Create a list of directories from the defined directory names
         pathList = []
