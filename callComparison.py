@@ -37,7 +37,8 @@ def get_query_value(hour,min,seconds):
 def grab_data_for_given_query(dataBase,query_string):
 
     # This subset should have information about all the channels in the given time series
-    subSet = dataBase[dataBase["Filename"].str.contains(query_string)]
+
+    subSet = dataBase[dataBase["Filename"].str.contains("_"+query_string+"_")]
     return subSet
 
 #def update_values(subset_database):
@@ -105,7 +106,7 @@ def process_given_folder_batch(path_to_files, startHour= 0, endHour = 0, startMi
                 if data_subset.empty:
                     print(f'Query: {query_str} \n ')
                     print("No data found for the query")
-                    break
+                    continue
                 max_file_name, sample_number = process_subset(data_subset.copy())
                 # All file names
                 file_names = data_subset["Filename"]
@@ -226,8 +227,9 @@ if __name__ == "__main__":
         #dict = {"batlure":[18,18,32,32,23,10], "barnoutline":[17,17,27,28,8,10],"batluremoving":[18,18,33,34,15,10],"birdcalls":[17,18,0,59,31,10],
         #        "mobile":[15,15,33,37,10],"mobile2":[15,15,55,57,10],"static":[12,32,32,23,10]}
 
-        dict = {"batlure": [23, 10], "barnoutline": [8, 10],"batluremoving": [15, 10],
-                "birdcalls": [31, 10],"mobile":[37,10],"mobile2":[57,10],"static":[23,10]}
+        #dict = {"batlure": [3, 10], "barnoutline": [8, 10],"batluremoving": [5, 10],"birdcalls": [1, 10]
+        folderNames = [ "mobile", "mobile2", "static"]
+        dict = {"mobile":[4,10],"mobile2":[2,10],"static":[9,10]}
 
         for dir in folderNames:
             path_with_dir = os.path.join(path, dir)
