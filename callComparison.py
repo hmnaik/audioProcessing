@@ -9,18 +9,26 @@ This way we can narrow down the calls to one single sound and possibly try to tr
 import os
 import pandas as pd
 import librosa
-#
+
+
 def read_csv(file_name):
-    """
-    :param file_name:
-    :return:
+    """ Read the .csv file and return data frame
+    :param file_name: str
+    :return: dataFrame (pandas)
     """
     dataBase = pd.read_csv(file_name)
     return dataBase
 
 #
 def get_query_value(hour,min,seconds):
-    # Convert all values to string
+    """
+    Get time values from the .csv file to create name for the audio file
+    :param hour: int
+    :param min: int
+    :param seconds: int
+    :return: str
+    """
+
     hour_str = str(hour)
     if hour < 10:
         hour_str = "0" + hour_str
@@ -36,16 +44,24 @@ def get_query_value(hour,min,seconds):
     return query
 #
 def grab_data_for_given_query(dataBase,query_string):
-
-    # This subset should have information about all the channels in the given time series
-
+    """
+    Find data from the dataFrame for the specific audio file, this would ideally include all files recorded by all microphones for
+    a specific time
+    :param dataBase: dataFrame (pandas)
+    :param query_string: str
+    :return: dataFrame (pandas)
+    """
     subSet = dataBase[dataBase["Filename"].str.contains("_"+query_string+"_")]
     return subSet
 
-#def update_values(subset_database):
-def process_subset(data_subset):
-    # find max intensity
 
+def process_subset(data_subset):
+    """
+    Process the data given for audio file recorded in a particular duration,
+    The function finds the channel that records loudest sound and the time duration of that sound
+    :param data_subset: dataFrame
+    :return: str, int
+    """
     max_intensity_id = data_subset["Max_intensity"].idxmax()
     sample_number = data_subset["Max_sample_timing"].loc[max_intensity_id]
     file_name = data_subset["Filename"].loc[max_intensity_id]
@@ -54,6 +70,18 @@ def process_subset(data_subset):
 
 
 def findMaxValues(path_to_files,file_names,sample_min, sample_max):
+    """
+    The function will find intensity and timing of the sound in all recordings based on the sample time of the
+    file that has recorded maximum sound. The idea is to find time of recording samples of the same sound. It is assumed that
+    all channels records the same sound (which is the loudest) at slightly different time intervals.
+    This will allow us to triangulate the sound.
+
+    :param path_to_files: str
+    :param file_names: str
+    :param sample_min: int
+    :param sample_max: int
+    :return:
+    """
 
     sample_locations = []
     amp_values = []
@@ -85,7 +113,21 @@ def findMaxValues(path_to_files,file_names,sample_min, sample_max):
     return sample_locations, amp_values
 
 def process_given_folder_batch(path_to_files, startHour= 0, endHour = 0, startMin = 0, endMin = 0 , secondStart = 0, secondInterval=0):
-
+    """
+    Process the given *csv file, that contains information about the sound files. Loudest sound is identified in one channel and
+    we try to find the recording of the same sound in all the other microphones. It is assumed that the loudest time is recroded in all
+    microphones but with a slight time delay.
+    Arguments include the start and stop time of each recording.
+    **** This is specific to one type of dataset produced with given audio array.
+    :param path_to_files: str
+    :param startHour: int
+    :param endHour: int
+    :param startMin: int
+    :param endMin: int
+    :param secondStart: int
+    :param secondInterval: int
+    :return: bool
+    """
     path_database = os.path.join(path_to_files, "database.csv")
     if os.path.exists(path_database) == False:
         return False
@@ -131,6 +173,19 @@ def process_given_folder_batch(path_to_files, startHour= 0, endHour = 0, startMi
     return True
 
 def process_given_folder (path_to_files, startHour, startMin, secondStart = 0, secondInterval = 5):
+    """
+    Process the given *csv file, that contains information about the sound files. Loudest sound is identified in one channel and
+    we try to find the recording of the same sound in all the other microphones. It is assumed that the loudest time is recroded in all
+    microphones but with a slight time delay.
+    Arguments include the start and stop time of each recording.
+    **** This is specific to one type of dataset produced with given audio array.
+    :param path_to_files: str
+    :param startHour: int
+    :param startMin: int
+    :param secondStart: int
+    :param secondInterval: int
+    :return: bool
+    """
 
     startMin_str = str(startMin)
     if startMin < 10:
@@ -180,6 +235,8 @@ def process_given_folder (path_to_files, startHour, startMin, secondStart = 0, s
 
 if __name__ == "__main__":
     """
+    The main function processes the .csv produced by callIdentifier.py, mainly the structure of dataset defines 
+    processing order. Here, two types of data are processed. One data is organized with day/date. 
     """
     starlingData = False
     if starlingData :
@@ -197,6 +254,7 @@ if __name__ == "__main__":
                 print(f' Processing file: {path_to_files}')
                 startHours = [11,12, 13]
                 startMins = [0,15,30,45]
+
                 # The structure of processing files is slightly different because minutes and hours are crucial to find right files to process and compare.
                 for startHour in startHours:
                     for startMin in startMins:
@@ -224,13 +282,7 @@ if __name__ == "__main__":
 
         path = "X:\\Mate_Data\\MALTA_Recordings\\2021_05_11"
         folderNames = ["batlure", "barnoutline", "batluremoving", "birdcalls", "mobile", "mobile2", "static"]
-        #Format : [startHour, endHour, startMin, endMin , secondStart, secondInterval]
-        #dict = {"batlure":[18,18,32,32,23,10], "barnoutline":[17,17,27,28,8,10],"batluremoving":[18,18,33,34,15,10],"birdcalls":[17,18,0,59,31,10],
-        #        "mobile":[15,15,33,37,10],"mobile2":[15,15,55,57,10],"static":[12,32,32,23,10]}
-
-        #dict = {"batlure": [3, 10], "barnoutline": [8, 10],"batluremoving": [5, 10],"birdcalls": [1, 10]
-        folderNames = [ "mobile", "mobile2", "static"]
-        dict = {"mobile":[4,10],"mobile2":[2,10],"static":[9,10]}
+        dict = {"batlure": [3, 10], "barnoutline": [8, 10],"batluremoving": [5, 10],"birdcalls": [1, 10], "mobile":[4,10],"mobile2":[2,10],"static":[9,10]}
 
         for dir in folderNames:
             path_with_dir = os.path.join(path, dir)

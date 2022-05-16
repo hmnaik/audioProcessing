@@ -160,7 +160,7 @@ if __name__ == '__main__':
             # Add samples to a file, the clipping from each file gets added one after another.
             compiled_sound_data = compiled_sound_data + list(samplesOfChoice)
 
-        # Write the final sound file 
+        # Write the final sound file
         soundfile.write(audio_compilation_file_path, compiled_sound_data, samplingRate)
 
 

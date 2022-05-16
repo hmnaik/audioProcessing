@@ -1,3 +1,25 @@
+# Audio Processing
+
+-- Part 1
+* Process audio files
+* Call identifier
+* Collect data from audio files and cross correlation.
+
+File order for processing.
+1. callIdentifier.py
+The file processes audio files given in a particular directory. These files usually contain sound recording of all microphones. This script will process all audio files and for each time duration finds the 
+channel that records maximum intensity of sound. This channel is our first approximation to locate the sound source. We record intensity and the time of the sound w.r.t the recording file. 
+2. callComparison.py
+The script, collects timing and intensity of sound in each clip. The file from callIdentifier.py is processed for each time duration. We identify the channel that records the loudes sound among all channels. 
+Based on the timing of the loudest sound, we process all audio files only for time window that is closer to loudest sound. Then we pick the loudest sound in this time window. This allows us to identify recording of a
+single sound from all channels. We assume that it is easy to identify loudest sound. 
+3. 
+
+-- Part 2
+* Process combined data for audio localization.
+-- Part 3
+* Process final results to get combined audio files.
+
 # Get Optimisation for x,y,z and timing for the sound source based on time difference of arrival (tdoa) from the mic data
 # RUN CORR_directcalc_corrweight_iterPer1_nofitv.py
 python CORR_directcalc_corrweight_iterPer1_nofitv.py correlationbased/correlation_11-15.csv >OUTcorr_11-15
