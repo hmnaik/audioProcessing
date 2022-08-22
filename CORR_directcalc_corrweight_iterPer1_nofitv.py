@@ -49,7 +49,7 @@ micLocation = defaultdict(dict)
 # REad microphone positions
 with open("micpos.csv", 'r') as file:
 	csvreader = csv.reader(file)
-	header = next(csvreader)
+	#header = next(csvreader)
 	for row in csvreader:
 		micLocation[row[0]] = [row[i] for i in range(1,4)]
 
@@ -60,11 +60,13 @@ tstart = defaultdict(dict)
 corrfocal = defaultdict(dict)
 loudestChannel = defaultdict(dict)
 
-if len(sys.argv) < 2:
-	print("Give input file as argument")
-	exit(-1)
-else:
-	file = str(sys.argv[1])	# "updated_dataBase_11-15.csv"
+# if len(sys.argv) < 2:
+# 	print("Give input file as argument")
+# 	exit(-1)
+# else:
+# 	file = str(sys.argv[1])	# "updated_dataBase_11-15.csv"
+
+file = "correlation.csv"
 
 
 with open(file, 'r') as file:

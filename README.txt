@@ -5,14 +5,19 @@
 Automated processing for the data recorded by microphnes. 
 1. callIdentifier.py
 The file processes audio files given in a particular directory. These files usually contain sound recording of all microphones. This script will process all audio files and for each time duration finds the 
-channel that records maximum intensity of sound. This channel is our first approximation to locate the sound source. We record intensity and the time of the sound w.r.t the recording file. 
+channel that records maximum intensity of sound. This channel is our first approximation to locate the sound source. We record intensity and the time of the sound w.r.t the recording file.
+output : database.csv
+
 2. callComparison.py
 The script, collects timing and intensity of sound in each clip. The file from callIdentifier.py is processed for each time duration. We identify the channel that records the loudes sound among all channels. 
 Based on the timing of the loudest sound, we process all audio files only for time window that is closer to loudest sound. Then we pick the loudest sound in this time window. This allows us to identify recording of a
-single sound from all channels. We assume that it is easy to identify loudest sound. 
+single sound from all channels. We assume that it is easy to identify loudest sound.
+output : updated_database.csv
+
 3. correlateAutomatedCalls.py
 The scipt will take results from callComparison.py and compute cross correlation between the files. This allows us to find the time delay between the focal signal and all the other signals. 
-This data is finally used to triangular the sound source to get 3D location of the sound. 
+This data is finally used to triangular the sound source to get 3D location of the sound.
+output : correlation.csv
 
 Manual processing for the data gathered by manual processing. 
 1. readTextFile.py 
@@ -30,6 +35,9 @@ The script creates cross correlation from the annotated data. The processing is 
 * Process combined data for audio localization.
 
 -- Part 3
+
+File 1
+
 * Process final results to get combined audio files.
 
 # Get Optimisation for x,y,z and timing for the sound source based on time difference of arrival (tdoa) from the mic data
@@ -39,6 +47,7 @@ python CORR_directcalc_corrweight_iterPer1_nofitv.py correlationbased/correlatio
 # OR use the script run and run_manual
 # Note that the column number was different for the automated and the manual files
 #
+
 # Concatenate output files using cat
 #
 # CHECK the Goodness of the Fit, (actually the residual, the smaller the better, which is the  sum of the square difference
@@ -49,11 +58,16 @@ python CORR_directcalc_corrweight_iterPer1_nofitv.py correlationbased/correlatio
 #
 # Result: OUTiter2_all17_newAll_6.xlsx
 # save gettracks... into csv,
+
+
+File 2
+
 #
 # Get VICON data for the same time instances
 # RUN getviconlocation_and_distance.py
-#
-python getviconlocation_and_distance.py gettracks_manualForDist.csv >OUTloc_manual
+
+
+#python getviconlocation_and_distance.py gettracks_manualForDist.csv >OUTloc_manual
 #
 # Input files> gettracks_7th.csv, gettracks_8th.csv, gettracks_9th.csv, gettracks_10th.csv, gettracks_manualForDist.csv
 # Resulting OUTput files

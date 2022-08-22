@@ -37,7 +37,7 @@ if len(sys.argv) < 2:
 	print("Give input file as argument")
 	exit(-1)
 else:
-	file = str(sys.argv[1])	# "updated_dataBase_11-15.csv"
+	file = str(sys.argv[1])	# "Outiter2.csv"
 
 
 with open(file, 'r') as file:
