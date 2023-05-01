@@ -1,4 +1,6 @@
-# Audio Processing
+The code is divided into three parts. The part 1 is the code to process the acousic files in a batch. The input of the acoustic file depends on the recording style and data storage format. The acoustic files are processed and stored in .csv files for further processing. 
+
+The data given for case study A can be used directly. 
 
 -- Part 1
 
@@ -19,7 +21,8 @@ The scipt will take results from callComparison.py and compute cross correlation
 This data is finally used to triangular the sound source to get 3D location of the sound.
 output : correlation.csv
 
-Manual processing for the data gathered by manual processing. 
+-- Separate file for manually annotated data and processing it. 
+Manual processing for the data gathered by manual processing.
 1. readTextFile.py 
 The text file contains name of the .wav file that is manually annotated for bird calls, along with the timing. 
 The script creates .csv file from the given file for computing cross correlation. 
@@ -29,55 +32,41 @@ used with the given annotations.
 2. processManualCalls.py
 The script creates cross correlation from the annotated data. The processing is same as the automated method explained earlier. 
 
-
-
 -- Part 2
-* Process combined data for audio localization.
+*Process combined data for audio localization. 
 
 -- Part 3
 
-File 1
+1. CORR_directcalc_corrweight_iterPer1_nofitv.py
 
-* Process final results to get combined audio files.
+* Process final results to get combined audio files. Get Optimisation for x,y,z and timing for the sound source based on time difference of arrival (tdoa) from the mic data
+--> RUN CORR_directcalc_corrweight_iterPer1_nofitv.py
+--> python CORR_directcalc_corrweight_iterPer1_nofitv.py correlationbased/correlation_11-15.csv >OUTcorr_11-15
 
-# Get Optimisation for x,y,z and timing for the sound source based on time difference of arrival (tdoa) from the mic data
-# RUN CORR_directcalc_corrweight_iterPer1_nofitv.py
-python CORR_directcalc_corrweight_iterPer1_nofitv.py correlationbased/correlation_11-15.csv >OUTcorr_11-15
-# 
 # OR use the script run and run_manual
 # Note that the column number was different for the automated and the manual files
-#
 
-# Concatenate output files using cat
-#
-# CHECK the Goodness of the Fit, (actually the residual, the smaller the better, which is the  sum of the square difference
-# Ignore those localisation from further analysis where:
-# - any parameter value is on or very close to the range of the set interval for the fitting
-# - any parameter value is at the initial value of the optimisation
-# - where the remaining residuals are still high
-#
-# Result: OUTiter2_all17_newAll_6.xlsx
-# save gettracks... into csv,
+Concatenate output files using cat
+CHECK the Goodness of the Fit, (actually the residual, the smaller the better, which is the  sum of the square difference
+Ignore those localisation from further analysis where:
+- any parameter value is on or very close to the range of the set interval for the fitting
+- any parameter value is at the initial value of the optimisation
+- where the remaining residuals are still high
+
+Output: OUTiter2_all17_newAll_6.xlsx
+save gettracks... into csv,
 
 
-File 2
+2. getviconlocation_and_distance.py
 
-#
 # Get VICON data for the same time instances
-# RUN getviconlocation_and_distance.py
-
+RUN getviconlocation_and_distance.py
 
 #python getviconlocation_and_distance.py gettracks_manualForDist.csv >OUTloc_manual
-#
-# Input files> gettracks_7th.csv, gettracks_8th.csv, gettracks_9th.csv, gettracks_10th.csv, gettracks_manualForDist.csv
-# Resulting OUTput files
-# (OUTloc_7th, OUTloc_8th, OUTloc_9th, OUTloc10th, OUTloc_manual
-#
-# concatenate using cat. Calc. distances in Excel (for simplicity)
-# Get if ID can be assigned based on distance of the sound from closest and from the second closet individual's backpack marker pattern
-#
-# (Possible future improvement: use backpack orientation (quaternions) to have a better estimate for the location of the head. Pro: more accurate for vocalisation. Con: maybe less accurate due to marker pattern false recognition flips; less accurate for sounds other then calls
-#
-# Resulting data files:
-# OUTlocID_alldays1.csv, OUTlocID_manual1.csv
-# OUTloc_all_12.xls
+
+Input files: gettracks_7th.csv, gettracks_8th.csv, gettracks_9th.csv, gettracks_10th.csv, gettracks_manualForDist.csv
+output: OUTloc_7th, OUTloc_8th, OUTloc_9th, OUTloc10th, OUTloc_manual
+
+concatenate using cat. Calc. distances in Excel (for simplicity). Get if ID can be assigned based on distance of the sound from closest and from the second closet individual's backpack marker pattern (Possible future improvement: use backpack orientation (quaternions) to have a better estimate for the location of the head. Pro: more accurate for vocalisation. Con: maybe less accurate due to marker pattern false recognition flips; less accurate for sounds other then calls
+
+Final result: OUTlocID_alldays1.csv, OUTlocID_manual1.csv, OUTloc_all_12.xls
