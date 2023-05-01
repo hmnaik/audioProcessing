@@ -33,9 +33,7 @@ used with the given annotations.
 The script creates cross correlation from the annotated data. The processing is same as the automated method explained earlier. 
 
 -- Part 2
-*Process combined data for audio localization. 
-
--- Part 3
+Use the correlation data to triangulate sound location and then further match the location with vicon. 
 
 1. CORR_directcalc_corrweight_iterPer1_nofitv.py
 
