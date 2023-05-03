@@ -1,3 +1,9 @@
+Latest release : 
+
+[![DOI](https://zenodo.org/badge/432256809.svg)](https://zenodo.org/badge/latestdoi/432256809)
+
+
+
 The code is divided into three parts. The part 1 is the code to process the acousic files in a batch. The input of the acoustic file depends on the recording style and data storage format. The acoustic files are processed and stored in .csv files for further processing. 
 
 The data given for case study A can be used directly. 
