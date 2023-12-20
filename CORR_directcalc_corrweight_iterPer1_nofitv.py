@@ -102,8 +102,6 @@ def dist1(i,x):
 	y=np.sqrt( (p[0,i]-x[0])**2 + (p[1,i]-x[1])**2 + (p[2,i]-x[2])**2 )
 	return y
 
-
-
 for timestamp, value in timing.items():
 	ts = float(tstart[timestamp])/1000.0	# convert to cs
 	# RUN THE FITTING
